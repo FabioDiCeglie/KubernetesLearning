@@ -22,18 +22,21 @@ This example demonstrates a typical microservices architecture using ClusterIP s
 └─────────────────────────────────────────────────────────────┘
 ```
 
+## Available Files
+
+### Backend Pod Deployments
+- `back-end-pod-user.yaml` - User service deployment only
+- `back-end-pod-order.yaml` - Order service deployment only
+
+### ClusterIP Services
+- `service-user.yaml` - User service ClusterIP only  
+- `service-order.yaml` - Order service ClusterIP only
+
+### Frontend & Testing
+- `frontend-deployment.yaml` - Frontend deployment + NodePort service
+- `test-pod.yaml` - Test pod for internal testing
+
 ## Deploy All Services
-
-### Option 1: Using Combined Files
-
-```bash
-kubectl apply -f user-service.yaml
-kubectl apply -f order-service.yaml
-kubectl apply -f frontend-deployment.yaml
-kubectl apply -f test-pod.yaml
-```
-
-### Option 2: Using Separated Files (Recommended)
 
 ```bash
 # Deploy backend pods
@@ -50,22 +53,6 @@ kubectl apply -f frontend-deployment.yaml
 # Deploy test pod
 kubectl apply -f test-pod.yaml
 ```
-
-## Available Files
-
-### Combined Files
-- `user-service.yaml` - User service deployment + service
-- `order-service.yaml` - Order service deployment + service
-
-### Separated Files
-- `back-end-pod-user.yaml` - User service deployment only
-- `service-user.yaml` - User service ClusterIP only  
-- `back-end-pod-order.yaml` - Order service deployment only
-- `service-order.yaml` - Order service ClusterIP only
-
-### Other Files
-- `frontend-deployment.yaml` - Frontend deployment + NodePort service
-- `test-pod.yaml` - Test pod for internal testing
 
 ## Verify Deployment
 
@@ -152,15 +139,6 @@ Open browser: `http://<NODE_IP>:30080`
 
 ## Clean Up
 
-### Using Combined Files
-```bash
-kubectl delete -f user-service.yaml
-kubectl delete -f order-service.yaml
-kubectl delete -f frontend-deployment.yaml
-kubectl delete -f test-pod.yaml
-```
-
-### Using Separated Files
 ```bash
 kubectl delete -f back-end-pod-user.yaml
 kubectl delete -f service-user.yaml
@@ -176,4 +154,5 @@ kubectl delete -f test-pod.yaml
 - **Security**: Backend services are not exposed externally
 - **Reliability**: Load balancing across multiple replicas
 - **Maintainability**: Services are loosely coupled
-- **Discovery**: Built-in service discovery via DNS names 
+- **Discovery**: Built-in service discovery via DNS names
+- **Organization**: Separated deployments and services for better management 
