@@ -1,8 +1,5 @@
-CREATE USER 'auth_user'@'localhost' IDENTIFIED BY 'auth_password';
-
-CREATE DATABASE auth;
-
-GRANT ALL PRIVILEGES ON auth.* TO 'auth_user'@'localhost';
+-- Database and user are already created by Docker Compose
+-- Just create the table and insert test data
 
 USE auth;
 
