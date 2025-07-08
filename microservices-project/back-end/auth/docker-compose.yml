@@ -1,0 +1,46 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: auth_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DB:-auth}
+      MYSQL_USER: ${MYSQL_USER:-auth_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-auth_password}
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - auth_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+
+  auth_app:
+    build: .
+    container_name: auth_app
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=${MYSQL_USER:-auth_user}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-auth_password}
+      - MYSQL_DB=${MYSQL_DB:-auth}
+      - MYSQL_PORT=3306
+      - JWT_SECRET=${JWT_SECRET:-your-super-secret-jwt-key-change-this-in-production}
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    networks:
+      - auth_network
+
+volumes:
+  mysql_data:
+
+networks:
+  auth_network:
+    driver: bridge 
