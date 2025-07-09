@@ -30,7 +30,20 @@ clean:
 test:
 	@echo "🧪 Testing API..."
 	@sleep 5
-	@curl -X POST http://localhost:8000/login -u "test@test.com:test" || echo "❌ Test failed - make sure services are running"
+	@echo "Testing login endpoint..."
+	@TOKEN=$$(curl -s -X POST http://localhost:8000/login -u "test@test.com:test") && \
+	if [ -n "$$TOKEN" ] && [ "$$TOKEN" != "null" ]; then \
+		echo "✅ Login test passed - JWT token received"; \
+		echo "Testing validate endpoint..."; \
+		RESPONSE=$$(curl -s -X POST http://localhost:8000/validate -H "Authorization: Bearer $$TOKEN"); \
+		if echo "$$RESPONSE" | grep -q "username"; then \
+			echo "✅ Validate test passed - Token validated successfully"; \
+		else \
+			echo "❌ Validate test failed - Invalid response: $$RESPONSE"; \
+		fi \
+	else \
+		echo "❌ Login test failed - No token received"; \
+	fi || echo "❌ Test failed - make sure services are running"
 
 # Restart services
 restart: stop run
