@@ -16,7 +16,7 @@ ENV PATH="/opt/venv/bin:$PATH"
 COPY requirements.txt .
 RUN uv pip install --no-cache -r requirements.txt
 
-FROM python:3.11-slim
+FROM python:3.11-slim AS auth
 
 WORKDIR /app
 

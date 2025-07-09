@@ -22,6 +22,7 @@ services:
 
   auth_app:
     build: .
+    image: auth:latest
     container_name: auth_app
     depends_on:
       mysql:
