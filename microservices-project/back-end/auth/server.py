@@ -31,6 +31,7 @@ def login():
     else:
         return jsonify({'error': 'Invalid credentials'}), 401
 
+
 @server.route('/validate', methods=['POST'])
 def validate():
     encoded_jwt = request.headers['Authorization']
@@ -44,6 +45,7 @@ def validate():
     except:
         return jsonify({'error': 'Invalid token'}), 401
 
+
 def createJWT(username, secret, authz):
     return jwt.encode(
         {
@@ -55,6 +57,7 @@ def createJWT(username, secret, authz):
         secret,
         algorithm='HS256'
     )
+
 
 if __name__ == '__main__':
     server.run(host='0.0.0.0', port=8000)
