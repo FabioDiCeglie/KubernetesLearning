@@ -10,7 +10,7 @@
 echo "🚀 Deploying Auth Service to Kubernetes"
 
 # For LOCAL development (you can override these):
-export MYSQL_HOST="localhost"
+export MYSQL_HOST="host.minikube.internal"
 export MYSQL_USER="auth_user"
 export MYSQL_DB="auth"
 export MYSQL_PORT=3306
