@@ -64,4 +64,46 @@ help:
 	@echo "  test     - Test the API"
 	@echo "  restart  - Restart services"
 	@echo "  status   - Show service status"
-	@echo "  help     - Show this help" 
+	@echo "  k8s-deploy - Deploy to Kubernetes"
+	@echo "  k8s-status - Check Kubernetes deployment status"
+	@echo "  k8s-logs   - Show Kubernetes pod logs"
+	@echo "  k8s-clean  - Remove from Kubernetes"
+	@echo "  help     - Show this help"
+
+# Kubernetes deployment targets
+k8s-deploy:
+	@echo "🚀 Deploying to Kubernetes..."
+	@cd manifests && chmod +x deploy.sh && ./deploy.sh
+
+k8s-status:
+	@echo "📊 Kubernetes deployment status:"
+	@echo "Pods:"
+	@kubectl get pods -l app=auth
+	@echo ""
+	@echo "Services:"
+	@kubectl get svc -l app=auth
+	@echo ""
+	@echo "ConfigMaps:"
+	@kubectl get configmap auth-configmap
+	@echo ""
+	@echo "Secrets:"
+	@kubectl get secret auth-secret
+
+k8s-logs:
+	@echo "📋 Showing Kubernetes pod logs..."
+	@kubectl logs -l app=auth --tail=50 -f
+
+k8s-clean:
+	@echo "🧹 Cleaning up Kubernetes resources..."
+	@kubectl delete deployment auth || true
+	@kubectl delete service auth-service || true
+	@kubectl delete configmap auth-configmap || true
+	@kubectl delete secret auth-secret || true
+	@echo "✅ Kubernetes cleanup complete"
+
+k8s-context:
+	@echo "🔍 Current Kubernetes context:"
+	@kubectl config current-context
+	@echo ""
+	@echo "Cluster info:"
+	@kubectl cluster-info
