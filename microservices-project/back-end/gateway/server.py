@@ -18,6 +18,11 @@ connection = pika.BlockingConnection(pika.ConnectionParameters("rabbitmq"))
 channel = connection.channel()
 
 
+@server.route('/health', methods=['GET'])
+def health():
+    return 204
+
+
 @server.route('/login', methods=['POST'])
 def login():
     token, err = access.login(request)

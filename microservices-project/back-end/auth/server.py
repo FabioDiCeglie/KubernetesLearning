@@ -11,6 +11,11 @@ server.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD')
 server.config['MYSQL_DB'] = os.environ.get('MYSQL_DB')
 server.config['MYSQL_PORT'] = int(os.environ.get('MYSQL_PORT', 3306))
 
+
+@server.route('/health', methods=['GET'])
+def health():
+    return 204
+
 @server.route('/login', methods=['POST'])
 def login():
     auth = request.authorization
