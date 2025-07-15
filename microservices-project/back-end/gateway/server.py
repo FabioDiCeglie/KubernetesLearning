@@ -22,9 +22,17 @@ channel = connection.channel()
 def login():
     token, err = access.login(request)
 
-    if err:
-        if err.status_code == 401:
-            return "Invalid username or password", 401
-        return "Error logging in", 500
-    
-    return token
+    if not err:
+        return token
+    else:
+        return err
+
+
+@server.route('/upload', methods=['POST'])
+def upload():
+    access, err = validate.token(request)
+
+    if not err:
+        pass
+    else:
+        return err
