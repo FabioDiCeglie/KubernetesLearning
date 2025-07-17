@@ -2,7 +2,7 @@
 
 # Default target
 run:
-	@echo "🚀 Starting Authentication Service..."
+	@echo "🚀 Starting Gateway Service..."
 	@chmod +x run.sh
 	@./run.sh
 
@@ -31,22 +31,15 @@ test:
 	@echo "🧪 Testing API..."
 	@sleep 5
 	@echo "Testing health endpoint..."
-	@RESPONSE=$$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health) && \
+	@RESPONSE=$$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/health) && \
 	if [ "$$RESPONSE" = "204" ]; then \
-		echo "✅ Health check passed - Auth service is running"; \
+		echo "✅ Health check passed - Gateway is running"; \
 		echo "Testing login endpoint..."; \
-		TOKEN=$$(curl -s -X POST http://localhost:8000/login -u "test@test.com:test") && \
-		if [ -n "$$TOKEN" ] && [ "$$TOKEN" != "null" ]; then \
-			echo "✅ Login test passed - JWT token received"; \
-			echo "Testing validate endpoint..."; \
-			RESPONSE=$$(curl -s -X POST http://localhost:8000/validate -H "Authorization: Bearer $$TOKEN"); \
-			if echo "$$RESPONSE" | grep -q "username"; then \
-				echo "✅ Validate test passed - Token validated successfully"; \
-			else \
-				echo "❌ Validate test failed - Invalid response: $$RESPONSE"; \
-			fi \
+		LOGIN_RESPONSE=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8080/login -u "test@test.com:test"); \
+		if [ "$$LOGIN_RESPONSE" = "200" ] || [ "$$LOGIN_RESPONSE" = "401" ]; then \
+			echo "✅ Login endpoint is responsive (status: $$LOGIN_RESPONSE)"; \
 		else \
-			echo "❌ Login test failed - No token received"; \
+			echo "❌ Login endpoint test failed - Status: $$LOGIN_RESPONSE"; \
 		fi \
 	else \
 		echo "❌ Health check failed - Status: $$RESPONSE"; \
@@ -85,27 +78,27 @@ k8s-deploy:
 k8s-status:
 	@echo "📊 Kubernetes deployment status:"
 	@echo "Pods:"
-	@kubectl get pods -l app=auth
+	@kubectl get pods -l app=gateway
 	@echo ""
 	@echo "Services:"
-	@kubectl get svc -l app=auth
+	@kubectl get svc -l app=gateway
 	@echo ""
 	@echo "ConfigMaps:"
-	@kubectl get configmap auth-configmap
+	@kubectl get configmap gateway-configmap
 	@echo ""
 	@echo "Secrets:"
-	@kubectl get secret auth-secret
+	@kubectl get secret gateway-secret
 
 k8s-logs:
 	@echo "📋 Showing Kubernetes pod logs..."
-	@kubectl logs -l app=auth --tail=50 -f
+	@kubectl logs -l app=gateway --tail=50 -f
 
 k8s-clean:
 	@echo "🧹 Cleaning up Kubernetes resources..."
-	@kubectl delete deployment auth || true
-	@kubectl delete service auth-service || true
-	@kubectl delete configmap auth-configmap || true
-	@kubectl delete secret auth-secret || true
+	@kubectl delete deployment gateway || true
+	@kubectl delete service gateway-service || true
+	@kubectl delete configmap gateway-configmap || true
+	@kubectl delete secret gateway-secret || true
 	@echo "✅ Kubernetes cleanup complete"
 
 k8s-context:
@@ -113,4 +106,4 @@ k8s-context:
 	@kubectl config current-context
 	@echo ""
 	@echo "Cluster info:"
-	@kubectl cluster-info
+	@kubectl cluster-info 
