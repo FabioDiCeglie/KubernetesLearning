@@ -9,7 +9,7 @@ from storage import util
 
 server = Flask(__name__)
 
-server.config['MONGO_URI'] = "mongodb://host.minikube.internal:27017/videos"
+server.config['MONGO_URI'] = os.getenv("MONGO_URI") or "mongodb://host.minikube.internal:27017/videos"
 
 mongo = PyMongo(server)
 fs = gridfs.GridFS(mongo.db)
@@ -57,3 +57,6 @@ def upload():
 @server.route('/download', methods=['GET'])
 def download():
     pass
+
+if __name__ == "__main__":
+    server.run(host='0.0.0.0', port=8080)
