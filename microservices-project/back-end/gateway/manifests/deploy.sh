@@ -17,6 +17,15 @@ echo "📋 Using configuration:"
 echo "  MONGO_URI: $MONGO_URI"
 echo "  AUTH_SERVICE_ADDRESS: $AUTH_SERVICE_ADDRESS"
 
+# Build and push the latest Docker image
+echo "🔨 Building and pushing Docker image..."
+cd ..
+echo "Building image fabiodiceglie/gateway:latest..."
+docker build -t fabiodiceglie/gateway:latest .
+echo "Pushing image to Docker Hub..."
+docker push fabiodiceglie/gateway:latest
+cd manifests
+
 # Check if we're running on minikube
 if kubectl config current-context | grep -q minikube; then
     echo "🔍 Detected minikube environment"
