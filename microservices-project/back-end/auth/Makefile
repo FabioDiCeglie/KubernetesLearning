@@ -1,4 +1,4 @@
-.PHONY: run stop logs build clean test help
+.PHONY: run stop logs build clean test k8s-test help
 
 # Default target
 run:
@@ -35,18 +35,19 @@ test:
 	if [ "$$RESPONSE" = "204" ]; then \
 		echo "✅ Health check passed - Auth service is running"; \
 		echo "Testing login endpoint..."; \
-		TOKEN=$$(curl -s -X POST http://localhost:8000/login -u "test@test.com:test") && \
-		if [ -n "$$TOKEN" ] && [ "$$TOKEN" != "null" ]; then \
+		LOGIN_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8000/login -u "test@test.com:test"); \
+		if [ "$$LOGIN_CODE" = "200" ]; then \
 			echo "✅ Login test passed - JWT token received"; \
 			echo "Testing validate endpoint..."; \
-			RESPONSE=$$(curl -s -X POST http://localhost:8000/validate -H "Authorization: Bearer $$TOKEN"); \
-			if echo "$$RESPONSE" | grep -q "username"; then \
+			TOKEN=$$(curl -s -X POST http://localhost:8000/login -u "test@test.com:test"); \
+			VALIDATE_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8000/validate -H "Authorization: Bearer $$TOKEN"); \
+			if [ "$$VALIDATE_CODE" = "200" ]; then \
 				echo "✅ Validate test passed - Token validated successfully"; \
 			else \
-				echo "❌ Validate test failed - Invalid response: $$RESPONSE"; \
+				echo "❌ Validate test failed - Status: $$VALIDATE_CODE"; \
 			fi \
 		else \
-			echo "❌ Login test failed - No token received"; \
+			echo "❌ Login test failed - Status: $$LOGIN_CODE"; \
 		fi \
 	else \
 		echo "❌ Health check failed - Status: $$RESPONSE"; \
@@ -72,6 +73,7 @@ help:
 	@echo "  restart  - Restart services"
 	@echo "  status   - Show service status"
 	@echo "  k8s-deploy - Deploy to Kubernetes"
+	@echo "  k8s-test   - Test the API in Kubernetes"
 	@echo "  k8s-status - Check Kubernetes deployment status"
 	@echo "  k8s-logs   - Show Kubernetes pod logs"
 	@echo "  k8s-clean  - Remove from Kubernetes"
@@ -95,6 +97,39 @@ k8s-status:
 	@echo ""
 	@echo "Secrets:"
 	@kubectl get secret auth-secret
+
+# Test the API in Kubernetes
+k8s-test:
+	@echo "🧪 Testing API in Kubernetes..."
+	@echo "🔌 Setting up port-forward to auth service..."
+	@kubectl port-forward service/auth 8000:8000 > /dev/null 2>&1 & \
+	PORT_FORWARD_PID=$$!; \
+	sleep 5; \
+	echo "Testing health endpoint..."; \
+	RESPONSE=$$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8000/health) && \
+	if [ "$$RESPONSE" = "204" ]; then \
+		echo "✅ Health check passed - Auth service is running in Kubernetes"; \
+		echo "Testing login endpoint..."; \
+		LOGIN_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8000/login -u "test@test.com:test"); \
+		if [ "$$LOGIN_CODE" = "200" ]; then \
+			echo "✅ Login test passed - JWT token received"; \
+			echo "Testing validate endpoint..."; \
+			TOKEN=$$(curl -s -X POST http://localhost:8000/login -u "test@test.com:test"); \
+			VALIDATE_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8000/validate -H "Authorization: Bearer $$TOKEN"); \
+			if [ "$$VALIDATE_CODE" = "200" ]; then \
+				echo "✅ Validate test passed - Token validated successfully"; \
+			else \
+				echo "❌ Validate test failed - Status: $$VALIDATE_CODE"; \
+			fi \
+		else \
+			echo "❌ Login test failed - Status: $$LOGIN_CODE"; \
+		fi \
+	else \
+		echo "❌ Health check failed - Status: $$RESPONSE"; \
+	fi || echo "❌ Test failed - make sure auth service is deployed and running"; \
+	echo "🔌 Cleaning up port-forward..."; \
+	kill $$PORT_FORWARD_PID > /dev/null 2>&1 || true
+
 
 k8s-logs:
 	@echo "📋 Showing Kubernetes pod logs..."

@@ -31,18 +31,20 @@ test:
 	@echo "🧪 Testing API..."
 	@sleep 5
 	@echo "Testing health endpoint..."
-	@RESPONSE=$$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/health) && \
-	if [ "$$RESPONSE" = "204" ]; then \
+	@HEALTH_CODE=$$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/health) && \
+	if [ "$$HEALTH_CODE" = "204" ]; then \
 		echo "✅ Health check passed - Gateway is running"; \
 		echo "Testing login endpoint..."; \
-		LOGIN_RESPONSE=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8080/login -u "test@test.com:test"); \
-		if [ "$$LOGIN_RESPONSE" = "200" ] || [ "$$LOGIN_RESPONSE" = "401" ]; then \
-			echo "✅ Login endpoint is responsive (status: $$LOGIN_RESPONSE)"; \
+		LOGIN_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8080/login -u "test@test.com:test"); \
+		if [ "$$LOGIN_CODE" = "200" ]; then \
+			echo "✅ Login test passed - Status: $$LOGIN_CODE"; \
+		elif [ "$$LOGIN_CODE" = "401" ]; then \
+			echo "✅ Login endpoint responsive - Auth service may be down (Status: $$LOGIN_CODE)"; \
 		else \
-			echo "❌ Login endpoint test failed - Status: $$LOGIN_RESPONSE"; \
+			echo "❌ Login test failed - Status: $$LOGIN_CODE"; \
 		fi \
 	else \
-		echo "❌ Health check failed - Status: $$RESPONSE"; \
+		echo "❌ Health check failed - Status: $$HEALTH_CODE"; \
 	fi || echo "❌ Test failed - make sure services are running"
 
 # Restart services
@@ -106,19 +108,22 @@ k8s-test:
 	@echo "💡 Make sure minikube tunnel is running"
 	@sleep 3
 	@echo "Testing health endpoint..."
-	@RESPONSE=$$(curl -s -o /dev/null -w "%{http_code}" http://mp3converter.com/health) && \
-	if [ "$$RESPONSE" = "204" ]; then \
+	@HEALTH_CODE=$$(curl -s -o /dev/null -w "%{http_code}" http://mp3converter.com/health) && \
+	if [ "$$HEALTH_CODE" = "204" ]; then \
 		echo "✅ Health check passed - Gateway is accessible via ingress"; \
 		echo "Testing login endpoint..."; \
-		LOGIN_RESPONSE=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://mp3converter.com/login -u "test@test.com:test"); \
-		if [ "$$LOGIN_RESPONSE" = "200" ] || [ "$$LOGIN_RESPONSE" = "401" ]; then \
-			echo "✅ Login endpoint is responsive (status: $$LOGIN_RESPONSE)"; \
+		LOGIN_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://mp3converter.com/login -u "test@test.com:test"); \
+		if [ "$$LOGIN_CODE" = "200" ]; then \
+			echo "✅ Login test passed - Status: $$LOGIN_CODE"; \
+			echo "🎉 Kubernetes ingress test passed!"; \
+		elif [ "$$LOGIN_CODE" = "401" ]; then \
+			echo "✅ Login endpoint responsive - Auth service may be down (Status: $$LOGIN_CODE)"; \
 			echo "🎉 Kubernetes ingress test passed!"; \
 		else \
-			echo "❌ Login endpoint test failed - Status: $$LOGIN_RESPONSE"; \
+			echo "❌ Login test failed - Status: $$LOGIN_CODE"; \
 		fi \
 	else \
-		echo "❌ Health check failed - Status: $$RESPONSE"; \
+		echo "❌ Health check failed - Status: $$HEALTH_CODE"; \
 		echo "🔧 Troubleshooting:"; \
 		echo "   - Check if minikube tunnel is running: pgrep -f 'minikube tunnel'"; \
 		echo "   - Check ingress status: kubectl get ingress"; \

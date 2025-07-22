@@ -3,4 +3,4 @@ kind: ConfigMap
 metadata:
   name: gateway-configmap
 data:
-  AUTH_SERVICE_ADDRESS: ${AUTH_SERVICE_ADDRESS:-auth:8000}
+  AUTH_SERVICE_ADDRESS: ${AUTH_SERVICE_ADDRESS}
