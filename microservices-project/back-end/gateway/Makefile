@@ -67,6 +67,7 @@ help:
 	@echo "  k8s-deploy - Deploy to Kubernetes"
 	@echo "  k8s-status - Check Kubernetes deployment status"
 	@echo "  k8s-logs   - Show Kubernetes pod logs"
+	@echo "  k8s-test   - Test Kubernetes deployment via ingress"
 	@echo "  k8s-clean  - Remove from Kubernetes"
 	@echo "  help     - Show this help"
 
@@ -92,6 +93,38 @@ k8s-status:
 k8s-logs:
 	@echo "📋 Showing Kubernetes pod logs..."
 	@kubectl logs -l app=gateway --tail=50 -f
+
+k8s-test:
+	@echo "🧪 Testing Kubernetes deployment via ingress..."
+	@echo "🔍 Checking if ingress is deployed..."
+	@if ! kubectl get ingress gateway-ingress >/dev/null 2>&1; then \
+		echo "❌ Ingress not found. Deploy first with 'make k8s-deploy'"; \
+		exit 1; \
+	fi
+	@echo "📡 Testing via mp3converter.com..."
+	@echo "💡 Make sure /etc/hosts contains: 127.0.0.1 mp3converter.com"
+	@echo "💡 Make sure minikube tunnel is running"
+	@sleep 3
+	@echo "Testing health endpoint..."
+	@RESPONSE=$$(curl -s -o /dev/null -w "%{http_code}" http://mp3converter.com/health) && \
+	if [ "$$RESPONSE" = "204" ]; then \
+		echo "✅ Health check passed - Gateway is accessible via ingress"; \
+		echo "Testing login endpoint..."; \
+		LOGIN_RESPONSE=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://mp3converter.com/login -u "test@test.com:test"); \
+		if [ "$$LOGIN_RESPONSE" = "200" ] || [ "$$LOGIN_RESPONSE" = "401" ]; then \
+			echo "✅ Login endpoint is responsive (status: $$LOGIN_RESPONSE)"; \
+			echo "🎉 Kubernetes ingress test passed!"; \
+		else \
+			echo "❌ Login endpoint test failed - Status: $$LOGIN_RESPONSE"; \
+		fi \
+	else \
+		echo "❌ Health check failed - Status: $$RESPONSE"; \
+		echo "🔧 Troubleshooting:"; \
+		echo "   - Check if minikube tunnel is running: pgrep -f 'minikube tunnel'"; \
+		echo "   - Check ingress status: kubectl get ingress"; \
+		echo "   - Check pods: kubectl get pods -l app=gateway"; \
+		echo "   - Check /etc/hosts: grep mp3converter.com /etc/hosts"; \
+	fi || echo "❌ Test failed - check connectivity and ingress setup"
 
 k8s-clean:
 	@echo "🧹 Cleaning up Kubernetes resources..."
