@@ -137,7 +137,11 @@ k8s-clean:
 	@kubectl delete service gateway-service || true
 	@kubectl delete configmap gateway-configmap || true
 	@kubectl delete secret gateway-secret || true
-	@echo "✅ Kubernetes cleanup complete"
+	@echo "🧹 Cleaning up MongoDB Docker container and volume..."
+	@docker stop mongodb 2>/dev/null || true
+	@docker rm mongodb 2>/dev/null || true
+	@docker volume rm mongodb_data 2>/dev/null || true
+	@echo "✅ Kubernetes and MongoDB cleanup complete"
 
 k8s-context:
 	@echo "🔍 Current Kubernetes context:"

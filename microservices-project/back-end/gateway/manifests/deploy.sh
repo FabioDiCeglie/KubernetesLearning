@@ -9,13 +9,25 @@
 
 echo "🚀 Deploying Gateway Service to Kubernetes"
 
-# For LOCAL development (you can override these):
-export MONGO_URI="mongodb://mongodb:27017/videos"
-export AUTH_SERVICE_ADDRESS="auth:8000"
+# For LOCAL development (you can override these by setting environment variables):
+export MONGO_URI="${MONGO_URI:-mongodb://host.minikube.internal:27017/videos}"
+export AUTH_SERVICE_ADDRESS="${AUTH_SERVICE_ADDRESS:-auth:8000}"
 
 echo "📋 Using configuration:"
 echo "  MONGO_URI: $MONGO_URI"
 echo "  AUTH_SERVICE_ADDRESS: $AUTH_SERVICE_ADDRESS"
+
+# Start MongoDB locally for Kubernetes pods to access via host.minikube.internal
+echo "🍃 Setting up MongoDB locally..."
+if ! docker ps | grep -q mongodb; then
+    echo "Starting MongoDB container..."
+    docker run -d --name mongodb -p 27017:27017 -v mongodb_data:/data/db mongo:7.0
+    echo "⏳ Waiting for MongoDB to be ready..."
+    sleep 10
+    echo "✅ MongoDB is running on localhost:27017"
+else
+    echo "✅ MongoDB container is already running"
+fi
 
 # Build and push the latest Docker image
 echo "🔨 Building and pushing Docker image..."
@@ -45,14 +57,16 @@ if kubectl config current-context | grep -q minikube; then
     fi
 fi
 
-# Generate the actual YAML files with environment variables
-echo "🔧 Generating manifests with environment variables..."
+# Apply manifests with proper environment variable substitution
+echo "🔧 Generating and applying manifests with environment variables..."
 envsubst < configmap.yaml | kubectl apply -f -
 envsubst < secret.yaml | kubectl apply -f -
 
-# Apply the deployment, service, and ingress
+# Apply the deployment, service, and ingress (but not the template files)
 echo "🚢 Deploying application..."
-kubectl apply -f ./
+kubectl apply -f deploy.yaml
+kubectl apply -f service.yaml
+kubectl apply -f ingress.yaml
 
 echo "✅ Deployment complete!"
 echo ""
