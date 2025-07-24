@@ -142,6 +142,11 @@ k8s-clean:
 	@kubectl delete configmap auth-configmap || true
 	@kubectl delete secret auth-secret || true
 	@echo "✅ Kubernetes cleanup complete"
+	@echo ""
+	@echo "🗄️  Cleaning up MySQL database with Docker..."
+	@docker stop mysql 2>/dev/null || true
+	@docker rm -f mysql 2>/dev/null || true
+	@echo "✅ MySQL database cleanup complete"
 
 k8s-context:
 	@echo "🔍 Current Kubernetes context:"
