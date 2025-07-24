@@ -12,9 +12,17 @@ echo "🚀 Deploying RabbitMQ Service to Kubernetes"
 # Note: RabbitMQ uses the official Docker image, no build needed
 echo "🔨 Using official RabbitMQ image: rabbitmq:3-management"
 
+# Apply manifests with proper environment variable substitution
+echo "🔧 Generating and applying manifests with environment variables..."
+envsubst < configmap.yaml | kubectl apply -f -
+envsubst < secret.yaml | kubectl apply -f -
+
 # Apply the StatefulSet and service
 echo "🚢 Deploying application..."
-kubectl apply -f ./
+kubectl apply -f statefulset.yaml
+kubectl apply -f service.yaml
+kubectl apply -f ingress.yaml
+kubectl apply -f pvc.yaml
 
 # Wait for the StatefulSet to be ready
 echo "⏳ Waiting for RabbitMQ to be ready..."
