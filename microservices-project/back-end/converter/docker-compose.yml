@@ -39,7 +39,7 @@ services:
     build: .
     container_name: converter_service
     environment:
-      - VIDEO_QUEUE=${VIDEO_QUEUE:-videos}
+      - VIDEO_QUEUE=${VIDEO_QUEUE:-video}
       - MP3_QUEUE=${MP3_QUEUE:-mp3}
     depends_on:
       mongodb:
