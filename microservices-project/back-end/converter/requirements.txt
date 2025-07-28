@@ -1,4 +1,4 @@
-altgraph @ file:///AppleInternal/Library/BuildRoots/39d9dc1a-2111-11f0-be06-226177e5bb69/Library/Caches/com.apple.xbs/Sources/python3/altgraph-0.17.2-py2.py3-none-any.whl
+altgraph==0.17.2
 annotated-types==0.7.0
 anyio==4.9.0
 asgiref==3.8.1
@@ -18,7 +18,7 @@ Django==4.2.20
 dnspython==2.7.0
 exceptiongroup==1.2.2
 fastavro==1.10.0
-future @ file:///AppleInternal/Library/BuildRoots/39d9dc1a-2111-11f0-be06-226177e5bb69/Library/Caches/com.apple.xbs/Sources/python3/future-0.18.2-py3-none-any.whl
+future==0.18.2
 googleapis-common-protos==1.70.0
 h11==0.16.0
 httpcore==1.0.9
@@ -32,7 +32,7 @@ joblib==1.4.2
 jsonlines==4.0.0
 jsonschema==4.23.0
 jsonschema-specifications==2025.4.1
-macholib @ file:///AppleInternal/Library/BuildRoots/39d9dc1a-2111-11f0-be06-226177e5bb69/Library/Caches/com.apple.xbs/Sources/python3/macholib-1.15.2-py2.py3-none-any.whl
+macholib==1.15.2
 markdown-it-py==3.0.0
 mccabe==0.7.0
 mdurl==0.1.2
@@ -66,7 +66,7 @@ rocksdict==0.3.26
 rpds-py==0.24.0
 scikit-learn==1.6.0
 scipy==1.13.1
-six @ file:///AppleInternal/Library/BuildRoots/39d9dc1a-2111-11f0-be06-226177e5bb69/Library/Caches/com.apple.xbs/Sources/python3/six-1.15.0-py2.py3-none-any.whl
+six==1.15.0
 sniffio==1.3.1
 sqlparse==0.5.3
 telebot==0.0.5
