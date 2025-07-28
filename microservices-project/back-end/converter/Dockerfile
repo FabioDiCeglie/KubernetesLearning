@@ -19,6 +19,7 @@ FROM python:3.11-slim AS converter
 WORKDIR /app
 
 COPY --from=builder /opt/venv /opt/venv
+
 COPY . .
 # Copy .env if it exists (for local development)
 COPY .env* ./

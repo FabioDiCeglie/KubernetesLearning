@@ -6,7 +6,7 @@ services:
     volumes:
       - mongodb_data:/data/db
     networks:
-      - gateway-network
+      - converter-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
@@ -26,7 +26,7 @@ services:
     volumes:
       - rabbitmq_data:/var/lib/rabbitmq
     networks:
-      - gateway-network
+      - converter-network
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "ping"]
