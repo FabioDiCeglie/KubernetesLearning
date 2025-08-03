@@ -14,6 +14,7 @@ help:
 	@echo "  k8s-deploy - Deploy to Kubernetes"
 	@echo "  k8s-status - Check Kubernetes deployment status"
 	@echo "  k8s-logs   - Show Kubernetes pod logs"
+	@echo "  k8s-restart - Restart Kubernetes deployment"
 	@echo "  k8s-test   - Test RabbitMQ in Kubernetes (requires minikube tunnel)"
 	@echo "  k8s-clean  - Remove from Kubernetes"
 	@echo "  help     - Show this help"
@@ -43,6 +44,13 @@ k8s-status:
 k8s-logs:
 	@echo "📋 Showing Kubernetes pod logs..."
 	@kubectl logs -l app=rabbitmq --tail=50 -f
+
+k8s-restart:
+	@echo "🔄 Restarting RabbitMQ deployment..."
+	@kubectl rollout restart deployment/rabbitmq
+	@echo "⏳ Waiting for rollout to complete..."
+	@kubectl rollout status deployment/rabbitmq
+	@echo "✅ RabbitMQ deployment restarted successfully"
 
 # Test RabbitMQ in Kubernetes
 k8s-test:

@@ -70,6 +70,7 @@ help:
 	@echo "  k8s-status - Check Kubernetes deployment status"
 	@echo "  k8s-logs   - Show Kubernetes pod logs"
 	@echo "  k8s-test   - Test Kubernetes deployment via ingress"
+	@echo "  k8s-restart - Restart Kubernetes pods"
 	@echo "  k8s-clean  - Remove from Kubernetes"
 	@echo "  help     - Show this help"
 
@@ -130,6 +131,13 @@ k8s-test:
 		echo "   - Check pods: kubectl get pods -l app=gateway"; \
 		echo "   - Check /etc/hosts: grep mp3converter.com /etc/hosts"; \
 	fi || echo "❌ Test failed - check connectivity and ingress setup"
+
+k8s-restart:
+	@echo "🔄 Restarting Kubernetes pods..."
+	@kubectl rollout restart deployment gateway
+	@echo "⏳ Waiting for rollout to complete..."
+	@kubectl rollout status deployment gateway
+	@echo "✅ Pods restarted successfully"
 
 k8s-clean:
 	@echo "🧹 Cleaning up Kubernetes resources..."

@@ -77,6 +77,7 @@ help:
 	@echo "  k8s-status - Check Kubernetes deployment status"
 	@echo "  k8s-logs   - Show Kubernetes pod logs"
 	@echo "  k8s-clean  - Remove from Kubernetes"
+	@echo "  k8s-restart - Restart Kubernetes pods (rollout restart)"
 	@echo "  help     - Show this help"
 
 # Kubernetes deployment targets
@@ -147,6 +148,13 @@ k8s-clean:
 	@docker stop mysql 2>/dev/null || true
 	@docker rm -f mysql 2>/dev/null || true
 	@echo "✅ MySQL database cleanup complete"
+
+k8s-restart:
+	@echo "🔄 Restarting Kubernetes pods..."
+	@kubectl rollout restart deployment auth
+	@echo "⏳ Waiting for rollout to complete..."
+	@kubectl rollout status deployment auth
+	@echo "✅ Pods restarted successfully"
 
 k8s-context:
 	@echo "🔍 Current Kubernetes context:"
