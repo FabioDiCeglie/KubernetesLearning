@@ -8,6 +8,8 @@ from convert import to_mp3
 
 
 def main():
+    print("Converter service starting...")
+    
     client = MongoClient("host.minikube.internal", 27017)
     db_videos = client.videos
     db_mp3s = client.mp3s
@@ -16,12 +18,16 @@ def main():
 
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
     channel = connection.channel()
+    
+    print("Converter service is healthy and ready!")
 
     def callback(channel, method, properties, body):
         err = to_mp3.start(body, fs_videos, fs_mp3s, channel)
         if err:
+            print(f"Conversion failed: {err}")
             channel.basic_nack(delivery_tag=method.delivery_tag)
         else:
+            print("Video converted successfully")
             channel.basic_ack(delivery_tag=method.delivery_tag)
 
     channel.basic_consume(
