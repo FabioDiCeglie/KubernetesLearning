@@ -30,19 +30,17 @@ else
 fi
 
 # Check if RabbitMQ is running and start if needed
-echo "🐰 Setting up RabbitMQ locally..."
-if ! docker ps | grep -q rabbitmq; then
-    echo "Starting RabbitMQ container..."
-    docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 \
-        -e RABBITMQ_DEFAULT_USER=guest \
-        -e RABBITMQ_DEFAULT_PASS=guest \
-        -v rabbitmq_data:/var/lib/rabbitmq \
-        rabbitmq:3.12-management
-    echo "⏳ Waiting for RabbitMQ to be ready..."
-    sleep 15
-    echo "✅ RabbitMQ is running on localhost:5672 (Management UI: localhost:15672)"
+echo "🐰 Setting up RabbitMQ in Kubernetes..."
+if ! kubectl get pods -l app=rabbitmq --field-selector=status.phase=Running 2>/dev/null | grep -q rabbitmq; then
+    echo "RabbitMQ not found in Kubernetes. Deploying RabbitMQ service..."
+    cd ../../rabbit/manifests
+    echo "Running RabbitMQ deployment script..."
+    chmod +x deploy.sh
+    ./deploy.sh
+    cd ../../converter/manifests
+    echo "✅ RabbitMQ service deployed to Kubernetes"
 else
-    echo "✅ RabbitMQ container is already running"
+    echo "✅ RabbitMQ service is already running in Kubernetes"
 fi
 
 # Build and push the latest Docker image
@@ -82,7 +80,8 @@ echo ""
 if kubectl config current-context | grep -q minikube; then
     echo "🌐 Local services access:"
     echo "  MongoDB: localhost:27017"
-    echo "  RabbitMQ Management UI: http://localhost:15672 (guest/guest)"
+    echo "  RabbitMQ Management UI: http://rabbitmq-manager.com (guest/guest)"
+    echo "  Note: Add '127.0.0.1 rabbitmq-manager.com' to /etc/hosts"
     echo ""
 fi
 
@@ -93,4 +92,5 @@ echo "📈 Queue monitoring:"
 echo "  Check RabbitMQ Management UI for video/mp3 queue activity"
 echo ""
 echo "🛑 To stop local services:"
-echo "  docker stop mongodb rabbitmq" 
+echo "  docker stop mongodb"
+echo "  kubectl delete -f ../../rabbit/manifests/ (to stop RabbitMQ)" 

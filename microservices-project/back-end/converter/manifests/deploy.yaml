@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
         - name: converter
-          image: converter:latest
+          image: fabiodiceglie/converter:latest
           envFrom:
             - secretRef:
                 name: converter-secret
