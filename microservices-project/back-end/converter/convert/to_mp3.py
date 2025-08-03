@@ -1,6 +1,6 @@
 import pika, json, tempfile, os
 from bson.objectid import ObjectId
-from moviepy import *
+from moviepy import VideoFileClip
 
 
 def start(message, fs_videos, fs_mp3s, channel):
@@ -17,7 +17,7 @@ def start(message, fs_videos, fs_mp3s, channel):
     tf.write(out.read())
 
     # Extract audio from the video file using moviepy
-    audio = moviepy.editor.VideoFileClip(tf.name).audio
+    audio = VideoFileClip(tf.name).audio
     tf.close()
 
     # Create a path for the temporary MP3 file
