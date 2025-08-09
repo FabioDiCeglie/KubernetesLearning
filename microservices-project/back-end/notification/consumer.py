@@ -8,7 +8,7 @@ def main():
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
     channel = connection.channel()
     
-    print("Converter service is healthy and ready!")
+    print("Notification service is healthy and ready!")
 
     def callback(channel, method, properties, body):
         err = email.notification(body)
