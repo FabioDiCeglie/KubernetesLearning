@@ -1,4 +1,5 @@
 import pika
+import os
 
 from send import email
 

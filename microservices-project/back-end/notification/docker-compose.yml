@@ -1,0 +1,41 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    ports:
+      - "5672:5672"      # AMQP port
+      - "15672:15672"    # Management UI
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - notification-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  notification:
+    build: .
+    container_name: notification_service
+    environment:
+      - MP3_QUEUE=${MP3_QUEUE:-mp3}
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - notification-network
+    volumes:
+      - .:/app
+    restart: unless-stopped
+
+networks:
+  notification-network:
+    driver: bridge
+
+volumes:
+  rabbitmq_data: 
