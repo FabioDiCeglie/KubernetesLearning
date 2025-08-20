@@ -9,15 +9,24 @@
 
 echo "🚀 Deploying Notification Service to Kubernetes"
 
+# Load environment variables from .env file if it exists
+if [ -f "../.env" ]; then
+    echo "📁 Loading environment variables from .env file..."
+    source ../.env
+    echo "✅ Environment variables loaded from .env"
+else
+    echo "⚠️  No .env file found at ../.env, using system environment variables"
+fi
+
 # For LOCAL development (you can override these by setting environment variables):
 export MP3_QUEUE="${MP3_QUEUE:-mp3}"
-export EMAIL_ADDRESS="${EMAIL_ADDRESS:-your-email@example.com}"
-export EMAIL_PASSWORD="${EMAIL_PASSWORD:-your-app-password}"
+export GMAIL_ADDRESS="${GMAIL_ADDRESS}"
+export GMAIL_PASSWORD="${GMAIL_PASSWORD}"
 
 echo "📋 Using configuration:"
 echo "  MP3_QUEUE: $MP3_QUEUE"
-echo "  EMAIL_ADDRESS: $EMAIL_ADDRESS"
-echo "  EMAIL_PASSWORD: [HIDDEN]"
+echo "  GMAIL_ADDRESS: $GMAIL_ADDRESS"
+echo "  GMAIL_PASSWORD: [HIDDEN]"
 
 # Start MongoDB locally for Kubernetes pods to access via host.minikube.internal
 echo "🍃 Setting up MongoDB locally..."
