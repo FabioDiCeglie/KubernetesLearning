@@ -98,7 +98,7 @@ k8s-test:
 	
 	@echo ""
 	@echo "🔐 Step 1: Testing login and getting JWT token..."
-	@TOKEN=$$(curl -s -X POST http://mp3converter.com/login -u "test@test.com:test") && \
+	@TOKEN=$$(curl -s -X POST http://mp3converter.com/login -u "ftestf9@gmail.com:test") && \
 	if [ -n "$$TOKEN" ] && [ "$$TOKEN" != '{"error":"Missing credentials"}' ] && [ "$$TOKEN" != '{"error":"Invalid credentials"}' ]; then \
 		echo "✅ Login successful - Token received"; \
 		echo "Token: $${TOKEN:0:50}..."; \

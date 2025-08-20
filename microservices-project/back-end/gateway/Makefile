@@ -35,7 +35,7 @@ test:
 	if [ "$$HEALTH_CODE" = "204" ]; then \
 		echo "✅ Health check passed - Gateway is running"; \
 		echo "Testing login endpoint..."; \
-		LOGIN_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8080/login -u "test@test.com:test"); \
+		LOGIN_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8080/login -u "ftestf9@gmail.com:test"); \
 		if [ "$$LOGIN_CODE" = "200" ]; then \
 			echo "✅ Login test passed - Status: $$LOGIN_CODE"; \
 		elif [ "$$LOGIN_CODE" = "401" ]; then \
@@ -115,10 +115,10 @@ k8s-test:
 		exit 1; \
 	fi
 	@echo "Testing login endpoint..."
-	@LOGIN_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://mp3converter.com/login -u "test@test.com:test"); \
+	@LOGIN_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://mp3converter.com/login -u "ftestf9@gmail.com:test"); \
 	if [ "$$LOGIN_CODE" = "200" ]; then \
 		echo "✅ Login successful - fetching token..."; \
-		TOKEN=$$(curl -s -X POST http://mp3converter.com/login -u "test@test.com:test"); \
+		TOKEN=$$(curl -s -X POST http://mp3converter.com/login -u "ftestf9@gmail.com:test"); \
 		if [ -z "$$TOKEN" ] || [ "$$TOKEN" = '{"error":"Missing credentials"}' ] || [ "$$TOKEN" = '{"error":"Invalid credentials"}' ]; then \
 			echo "❌ Failed to obtain token"; exit 1; \
 		fi; \

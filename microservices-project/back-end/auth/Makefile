@@ -35,11 +35,11 @@ test:
 	if [ "$$RESPONSE" = "204" ]; then \
 		echo "✅ Health check passed - Auth service is running"; \
 		echo "Testing login endpoint..."; \
-		LOGIN_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8000/login -u "test@test.com:test"); \
+		LOGIN_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8000/login -u "ftestf9@gmail.com:test"); \
 		if [ "$$LOGIN_CODE" = "200" ]; then \
 			echo "✅ Login test passed - JWT token received"; \
 			echo "Testing validate endpoint..."; \
-			TOKEN=$$(curl -s -X POST http://localhost:8000/login -u "test@test.com:test"); \
+			TOKEN=$$(curl -s -X POST http://localhost:8000/login -u "ftestf9@gmail.com:test"); \
 			VALIDATE_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8000/validate -H "Authorization: Bearer $$TOKEN"); \
 			if [ "$$VALIDATE_CODE" = "200" ]; then \
 				echo "✅ Validate test passed - Token validated successfully"; \
@@ -111,11 +111,11 @@ k8s-test:
 	if [ "$$RESPONSE" = "204" ]; then \
 		echo "✅ Health check passed - Auth service is running in Kubernetes"; \
 		echo "Testing login endpoint..."; \
-		LOGIN_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8000/login -u "test@test.com:test"); \
+		LOGIN_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8000/login -u "ftestf9@gmail.com:test"); \
 		if [ "$$LOGIN_CODE" = "200" ]; then \
 			echo "✅ Login test passed - JWT token received"; \
 			echo "Testing validate endpoint..."; \
-			TOKEN=$$(curl -s -X POST http://localhost:8000/login -u "test@test.com:test"); \
+			TOKEN=$$(curl -s -X POST http://localhost:8000/login -u "ftestf9@gmail.com:test"); \
 			VALIDATE_CODE=$$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8000/validate -H "Authorization: Bearer $$TOKEN"); \
 			if [ "$$VALIDATE_CODE" = "200" ]; then \
 				echo "✅ Validate test passed - Token validated successfully"; \
