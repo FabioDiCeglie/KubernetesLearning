@@ -26,7 +26,7 @@ export GMAIL_PASSWORD="${GMAIL_PASSWORD}"
 echo "📋 Using configuration:"
 echo "  MP3_QUEUE: $MP3_QUEUE"
 echo "  GMAIL_ADDRESS: $GMAIL_ADDRESS"
-echo "  GMAIL_PASSWORD: [HIDDEN]"
+echo "  GMAIL_PASSWORD: $GMAIL_PASSWORD"
 
 # Start MongoDB locally for Kubernetes pods to access via host.minikube.internal
 echo "🍃 Setting up MongoDB locally..."
