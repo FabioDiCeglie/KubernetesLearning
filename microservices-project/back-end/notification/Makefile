@@ -101,6 +101,10 @@ k8s-test:
 		echo "❌ Converter service not running. Deploy converter first with 'make k8s-deploy'"; \
 		exit 1; \
 	fi
+	@if ! kubectl get pods -l app=notification | grep -q Running; then \
+		echo "❌ Notification service not running. Deploy notification first."; \
+		exit 1; \
+	fi
 	@echo "📡 Testing complete pipeline via mp3converter.com..."
 	@echo "💡 Make sure /etc/hosts contains: 127.0.0.1 mp3converter.com"
 	@echo "💡 Make sure minikube tunnel is running"
@@ -126,15 +130,17 @@ k8s-test:
 			echo "Response: $$UPLOAD_BODY"; \
 			\
 			echo ""; \
-			echo "⏳ Step 4: Waiting for conversion process (30 seconds)..."; \
-			for i in $$(seq 1 30); do \
+			echo "⏳ Step 3: Waiting for conversion and notification process (45 seconds)..."; \
+			echo "   - Video → MP3 conversion"; \
+			echo "   - Email notification processing"; \
+			for i in $$(seq 1 45); do \
 				printf "."; \
 				sleep 1; \
 			done; \
 			echo ""; \
 			\
 			echo ""; \
-			echo "🗄️  Step 5: Checking MongoDB for video storage..."; \
+			echo "🗄️  Step 4: Checking MongoDB for video storage..."; \
 			MONGO_VIDEO_COUNT=$$(kubectl exec -i $$(kubectl get pods -l app=gateway -o jsonpath='{.items[0].metadata.name}') -- \
 				python3 -c "from pymongo import MongoClient; \
 				client = MongoClient('host.minikube.internal', 27017); \
@@ -147,24 +153,66 @@ k8s-test:
 				print(client.mp3s.fs.files.count_documents({}))" 2>/dev/null || echo "0"); \
 			echo "MP3s in MongoDB: $$MONGO_MP3_COUNT"; \
 			\
+			if [ "$$MONGO_MP3_COUNT" -gt "0" ]; then \
+				echo "Getting MP3 file ID for download test..."; \
+				MP3_FILE_ID=$$(kubectl exec -i $$(kubectl get pods -l app=gateway -o jsonpath='{.items[0].metadata.name}') -- \
+					python3 -c "from pymongo import MongoClient; \
+					client = MongoClient('host.minikube.internal', 27017); \
+					doc = client.mp3s.fs.files.find_one({}); \
+					print(str(doc['_id']) if doc else '')" 2>/dev/null || echo ""); \
+				echo "MP3 File ID: $$MP3_FILE_ID"; \
+			fi; \
+			\
 			echo ""; \
-			echo "🐰 Step 6: Checking RabbitMQ queue status..."; \
+			echo "🐰 Step 5: Checking RabbitMQ queue status..."; \
 			RABBITMQ_POD=$$(kubectl get pods -l app=rabbitmq -o jsonpath='{.items[0].metadata.name}' 2>/dev/null); \
 			if [ -n "$$RABBITMQ_POD" ]; then \
-				echo "Checking video queue..."; \
-				kubectl exec $$RABBITMQ_POD -- rabbitmqctl list_queues name messages 2>/dev/null | grep -E "(video|mp3)" || echo "No video/mp3 queues found"; \
+				echo "Checking video and mp3 queues..."; \
+				QUEUE_STATUS=$$(kubectl exec $$RABBITMQ_POD -- rabbitmqctl list_queues name messages 2>/dev/null); \
+				echo "$$QUEUE_STATUS" | grep -E "(video|mp3)" || echo "No video/mp3 queues found"; \
+				\
+				VIDEO_QUEUE_MSGS=$$(echo "$$QUEUE_STATUS" | grep "video" | awk '{print $$2}' || echo "0"); \
+				MP3_QUEUE_MSGS=$$(echo "$$QUEUE_STATUS" | grep "mp3" | awk '{print $$2}' || echo "0"); \
+				echo "📊 Video queue messages: $$VIDEO_QUEUE_MSGS"; \
+				echo "📊 MP3 queue messages: $$MP3_QUEUE_MSGS"; \
 			else \
 				echo "⚠️  RabbitMQ pod not found in Kubernetes"; \
 			fi; \
 			\
 			echo ""; \
-			echo "📊 Step 7: Checking converter service logs..."; \
+			echo "📊 Step 6: Checking service logs..."; \
 			echo "Recent converter logs:"; \
 			kubectl logs -l app=converter --tail=10 2>/dev/null || echo "No converter logs available"; \
 			\
 			echo ""; \
-			echo "🎯 Pipeline Test Results:"; \
-			echo "========================"; \
+			echo "Recent notification logs:"; \
+			kubectl logs -l app=notification --tail=10 2>/dev/null || echo "No notification logs available"; \
+			\
+			echo ""; \
+			echo "📥 Step 7: Testing download endpoint..."; \
+			if [ -n "$$MP3_FILE_ID" ] && [ "$$MP3_FILE_ID" != "" ]; then \
+				echo "Testing download with MP3 ID: $$MP3_FILE_ID"; \
+				mkdir -p test-downloads; \
+				DOWNLOAD_CODE=$$(curl -s -o "test-downloads/$$MP3_FILE_ID.mp3" -w "%{http_code}" \
+					"http://mp3converter.com/download?file_id=$$MP3_FILE_ID" \
+					-H "Authorization: Bearer $$TOKEN"); \
+				\
+				if [ "$$DOWNLOAD_CODE" = "200" ]; then \
+					DOWNLOAD_SIZE=$$(wc -c < "test-downloads/$$MP3_FILE_ID.mp3" | tr -d ' '); \
+					echo "✅ Download successful → test-downloads/$$MP3_FILE_ID.mp3 ($$DOWNLOAD_SIZE bytes)"; \
+					DOWNLOAD_SUCCESS="YES"; \
+				else \
+					echo "❌ Download failed - Status: $$DOWNLOAD_CODE"; \
+					DOWNLOAD_SUCCESS="NO"; \
+				fi; \
+			else \
+				echo "⚠️  No MP3 file ID available for download test"; \
+				DOWNLOAD_SUCCESS="SKIPPED"; \
+			fi; \
+			\
+			echo ""; \
+			echo "🎯 Complete Pipeline Test Results:"; \
+			echo "==================================="; \
 			echo "✅ Login: SUCCESS"; \
 			echo "✅ Upload: SUCCESS"; \
 			if [ "$$MONGO_VIDEO_COUNT" -gt "0" ]; then \
@@ -177,9 +225,26 @@ k8s-test:
 			else \
 				echo "⚠️  MP3 Conversion: No MP3s found (may still be processing)"; \
 			fi; \
+			if [ "$$MP3_QUEUE_MSGS" = "0" ]; then \
+				echo "✅ MP3 Queue Processing: SUCCESS (queue empty - messages processed)"; \
+			else \
+				echo "⚠️  MP3 Queue Processing: $$MP3_QUEUE_MSGS messages still pending"; \
+			fi; \
+			if [ "$$DOWNLOAD_SUCCESS" = "YES" ]; then \
+				echo "✅ Download Endpoint: SUCCESS"; \
+			elif [ "$$DOWNLOAD_SUCCESS" = "NO" ]; then \
+				echo "❌ Download Endpoint: FAILED"; \
+			else \
+				echo "⚠️  Download Endpoint: SKIPPED (no MP3 available)"; \
+			fi; \
 			echo ""; \
-			echo "🎉 Complete pipeline test finished!"; \
-			echo "💡 Check converter logs with: kubectl logs -l app=converter -f"; \
+			echo "🎉 Complete end-to-end pipeline test finished!"; \
+			echo ""; \
+			echo "🔧 Troubleshooting Commands:"; \
+			echo "   - Converter logs: kubectl logs -l app=converter -f"; \
+			echo "   - Notification logs: kubectl logs -l app=notification -f"; \
+			echo "   - Gateway logs: kubectl logs -l app=gateway -f"; \
+			echo "   - RabbitMQ status: kubectl exec \$$(kubectl get pods -l app=rabbitmq -o jsonpath='{.items[0].metadata.name}') -- rabbitmqctl list_queues"; \
 			\
 		else \
 			echo "❌ Video upload failed - Status: $$UPLOAD_CODE"; \
@@ -191,8 +256,9 @@ k8s-test:
 		fi; \
 		\
 		echo ""; \
-		echo "🧹 Cleaning up test file..."; \
+		echo "🧹 Cleaning up test files..."; \
 		rm -f test_video.mp4; \
+		rm -rf test-downloads; \
 		\
 	else \
 		echo "❌ Login failed"; \
@@ -205,10 +271,9 @@ k8s-test:
 
 k8s-clean:
 	@echo "🧹 Cleaning up Kubernetes resources..."
-	@kubectl delete deployment converter || true
-	@kubectl delete service converter-service || true
-	@kubectl delete configmap converter-configmap || true
-	@kubectl delete secret converter-secret || true
+	@kubectl delete deployment notification || true
+	@kubectl delete configmap notification-configmap || true
+	@kubectl delete secret notification-secret || true
 	@echo "🧹 Cleaning up RabbitMQ Docker container and volume..."
 	@docker stop rabbitmq 2>/dev/null || true
 	@docker rm rabbitmq 2>/dev/null || true
@@ -217,9 +282,9 @@ k8s-clean:
 
 k8s-restart:
 	@echo "🔄 Restarting Kubernetes pods..."
-	@kubectl rollout restart deployment converter
+	@kubectl rollout restart deployment notification
 	@echo "⏳ Waiting for rollout to complete..."
-	@kubectl rollout status deployment converter
+	@kubectl rollout status deployment notification
 	@echo "✅ Pods restarted successfully"
 
 k8s-context:
