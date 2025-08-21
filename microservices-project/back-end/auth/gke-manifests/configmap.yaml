@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-configmap
+  namespace: microservices
+data:
+  MYSQL_HOST: "mysql-service"
+  MYSQL_USER: "auth_user"
+  MYSQL_DB: "auth"
+  MYSQL_PORT: "3306"
