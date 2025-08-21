@@ -24,12 +24,14 @@ def notification(message):
         msg["From"] = sender_address
         msg["To"] = receiver_address
 
+        print(f"🔌 Connecting to Gmail SMTP with {sender_address}...")
         session = smtplib.SMTP("smtp.gmail.com", 587)
         session.starttls()
         session.login(sender_address, sender_password)
+        print("📧 Sending message...")
         session.send_message(msg, sender_address, receiver_address)
         session.quit()
-        print("Mail Sent")
+        print("✅ Mail Sent Successfully!")
 
     except Exception as err:
         print(err)

@@ -130,10 +130,10 @@ k8s-test:
 			echo "Response: $$UPLOAD_BODY"; \
 			\
 			echo ""; \
-			echo "⏳ Step 3: Waiting for conversion and notification process (45 seconds)..."; \
+			echo "⏳ Step 3: Waiting for conversion and notification process (10 seconds)..."; \
 			echo "   - Video → MP3 conversion"; \
 			echo "   - Email notification processing"; \
-			for i in $$(seq 1 45); do \
+			for i in $$(seq 1 10); do \
 				printf "."; \
 				sleep 1; \
 			done; \

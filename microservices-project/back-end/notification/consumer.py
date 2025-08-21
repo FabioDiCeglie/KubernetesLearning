@@ -1,10 +1,12 @@
 import pika
 import os
+import sys
 
 from send import email
 
 
 def main():
+    print("Notification service starting...")
     connection = pika.BlockingConnection(pika.ConnectionParameters(host='rabbitmq'))
     channel = connection.channel()
     
