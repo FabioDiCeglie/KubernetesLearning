@@ -6,7 +6,7 @@ metadata:
   labels:
     app: auth
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: auth
@@ -20,9 +20,10 @@ spec:
       labels:
         app: auth
     spec:
+      serviceAccountName: auth-service-account
       containers:
       - name: auth
-        image: gcr.io/YOUR_PROJECT_ID/auth:latest  # Replace with your actual project ID
+        image: gcr.io/video-converter-469811/auth:latest
         ports:
         - containerPort: 8000
         envFrom:
@@ -30,6 +31,10 @@ spec:
             name: auth-configmap
         - secretRef:
             name: auth-secret
+        volumeMounts:
+        - name: secrets-store
+          mountPath: "/mnt/secrets"
+          readOnly: true
         resources:
           requests:
             memory: "256Mi"
@@ -49,3 +54,10 @@ spec:
             port: 8000
           initialDelaySeconds: 60
           periodSeconds: 30
+      volumes:
+      - name: secrets-store
+        csi:
+          driver: secrets-store-gke.csi.k8s.io
+          readOnly: true
+          volumeAttributes:
+            secretProviderClass: "auth-secrets"
