@@ -20,6 +20,23 @@ echo "📊 Current cluster info:"
 kubectl cluster-info
 
 echo ""
+echo "🐳 Building and pushing Docker image..."
+
+# Configure Docker to use gcloud as a credential helper
+echo "Configuring Docker for Google Container Registry..."
+gcloud auth configure-docker gcr.io --quiet
+
+cd ../
+echo "Building auth service Docker image for linux/amd64..."
+docker build --platform linux/amd64 -t gcr.io/$PROJECT_ID/auth:latest .
+
+echo "Pushing image to Google Container Registry..."
+docker push gcr.io/$PROJECT_ID/auth:latest
+
+echo "✅ Docker image pushed successfully!"
+cd gke-manifests/
+
+echo ""
 echo "🗃️  Creating namespace..."
 kubectl apply -f namespace.yaml
 
@@ -48,23 +65,31 @@ if [ ${#MISSING_SECRETS[@]} -ne 0 ]; then
     exit 1
 fi
 
-# Check if Google Service Account exists
-if ! gcloud iam service-accounts describe "auth-secrets-sa@$PROJECT_ID.iam.gserviceaccount.com" > /dev/null 2>&1; then
-    echo "❌ Google Service Account not found: auth-secrets-sa@$PROJECT_ID.iam.gserviceaccount.com"
-    echo "🔧 Please run: ./setup-secrets.sh to create it"
-    exit 1
-fi
-
 echo "✅ All required secrets found:"
 for secret in "${REQUIRED_SECRETS[@]}"; do
     echo "   ✓ $secret"
 done
-echo "✅ Google Service Account found: auth-secrets-sa@$PROJECT_ID.iam.gserviceaccount.com"
 
 echo ""
-echo "🔐 Deploying Auth service (creates secrets first)..."
-kubectl apply -f service-account.yaml
-kubectl apply -f secret-provider-class.yaml
+echo "🔐 Creating Kubernetes secrets from Google Secret Manager..."
+kubectl create secret generic auth-secret -n microservices \
+  --from-literal=MYSQL_PASSWORD="$(gcloud secrets versions access latest --secret=mysql-password)" \
+  --from-literal=JWT_SECRET="$(gcloud secrets versions access latest --secret=jwt-secret)" \
+  --from-literal=MYSQL_USER="$(gcloud secrets versions access latest --secret=mysql-user)" \
+  --from-literal=MYSQL_DB="$(gcloud secrets versions access latest --secret=mysql-database)" \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+kubectl create secret generic mysql-secret -n microservices \
+  --from-literal=MYSQL_ROOT_PASSWORD="$(gcloud secrets versions access latest --secret=mysql-root-password)" \
+  --from-literal=MYSQL_PASSWORD="$(gcloud secrets versions access latest --secret=mysql-password)" \
+  --from-literal=MYSQL_DATABASE="$(gcloud secrets versions access latest --secret=mysql-database)" \
+  --from-literal=MYSQL_USER="$(gcloud secrets versions access latest --secret=mysql-user)" \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+echo "✅ Secrets created successfully!"
+
+echo ""
+echo "🔐 Deploying Auth service..."
 kubectl apply -f configmap.yaml
 kubectl apply -f deploy.yaml
 kubectl apply -f service.yaml
